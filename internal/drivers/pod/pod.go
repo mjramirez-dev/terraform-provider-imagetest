@@ -411,7 +411,7 @@ func startLogStream(ctx context.Context, cli kubernetes.Interface, pod *corev1.P
 	var logs io.ReadCloser
 	var err error
 	maxRetries := 5
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		logs, err = lreq.Stream(ctx)
 		if err == nil {
 			break

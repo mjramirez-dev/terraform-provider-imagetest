@@ -19,18 +19,18 @@ resource "imagetest_tests" "gke_basic" {
 
   drivers = {
     gke = {
-      project    = "<YOUR_GCP_PROJECT_ID>"
-      region     = "us-central1"
-      
+      project = "<YOUR_GCP_PROJECT_ID>"
+      region  = "us-central1"
+
       # Use a unique cluster name to avoid conflicts
       # cluster_name = "imagetest-gke-test-final"  # Let GKE auto-generate
-      
+
       # Optional: customize cluster
       # node_count    = 2
       # machine_type  = "n1-standard-4"
       # disk_size_gb  = 150
       # disk_type     = "pd-ssd"
-      
+
       # Optional: add custom labels
       # tags = {
       #   environment = "test"
@@ -49,7 +49,7 @@ resource "imagetest_tests" "gke_basic" {
 
   tests = [
     {
-      name  = "smoke-test"
+      name = "smoke-test"
       # Test sandbox image - provides kubectl and other tools
       image = "cgr.dev/chainguard/kubectl:latest-dev@sha256:9d3f6aa5c7741d84ca6a82935df987162f7c53692f98c48624c1871f03c40f8b"
       cmd   = <<-EOF
@@ -74,7 +74,7 @@ resource "imagetest_tests" "gke_basic" {
       ]
     }
   ]
-  
+
   # GKE cluster creation takes ~10-15 minutes
   timeout = "45m"
 }

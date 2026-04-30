@@ -26,13 +26,13 @@ import (
 )
 
 const (
-	regionDefault     = "us-central1"
-	nodeCountDefault  = 1
+	regionDefault      = "us-central1"
+	nodeCountDefault   = 1
 	machineTypeDefault = "e2-standard-4"
-	diskSizeGBDefault = 100
-	diskTypeDefault   = "pd-standard"
-	timeoutDefault    = 30 * time.Minute
-	pollFrequency     = 30 * time.Second
+	diskSizeGBDefault  = 100
+	diskTypeDefault    = "pd-standard"
+	timeoutDefault     = 30 * time.Minute
+	pollFrequency      = 30 * time.Second
 )
 
 type driver struct {
@@ -296,10 +296,10 @@ func (k *driver) createCluster(ctx context.Context) error {
 
 	// Wait for operation to complete
 	log.Info("Waiting for GKE cluster provisioning...")
-	
+
 	// The operation name should be in format: projects/{project}/locations/{location}/operations/{operation}
 	opName := op.GetName()
-	
+
 	// If the operation name doesn't include the full path, construct it
 	if !strings.Contains(opName, "projects/") {
 		opName = fmt.Sprintf("%s/operations/%s", parent, opName)
@@ -347,13 +347,13 @@ func (k *driver) createCluster(ctx context.Context) error {
 
 		switch opResp.Status {
 		case containerpb.Operation_DONE:
-			if opResp.StatusMessage != "" && opResp.StatusMessage != "Done" {
-				return fmt.Errorf("cluster creation failed: %s", opResp.StatusMessage)
+			if e := opResp.GetError(); e != nil {
+				return fmt.Errorf("cluster creation failed: %s", e.GetMessage())
 			}
 			log.Infof("Created GKE cluster: %s", k.clusterName)
 			return nil
 		case containerpb.Operation_ABORTING:
-			return fmt.Errorf("cluster creation aborting: %s", opResp.StatusMessage)
+			return fmt.Errorf("cluster creation aborting: %s", opResp.GetError().GetMessage())
 		case containerpb.Operation_PENDING, containerpb.Operation_RUNNING:
 			log.Debugf("Cluster creation in progress, status: %s", opResp.Status)
 		default:
@@ -381,10 +381,10 @@ func (k *driver) deleteCluster(ctx context.Context) error {
 
 	// Wait for deletion to complete
 	log.Info("Waiting for cluster deletion...")
-	
+
 	// The operation name should be in format: projects/{project}/locations/{location}/operations/{operation}
 	opName := op.GetName()
-	
+
 	// If the operation name doesn't include the full path, construct it
 	if !strings.Contains(opName, "projects/") {
 		opName = fmt.Sprintf("%s/operations/%s", parent, opName)
@@ -436,7 +436,7 @@ func (k *driver) deleteCluster(ctx context.Context) error {
 			log.Info("Cluster deleted successfully")
 			return nil
 		case containerpb.Operation_ABORTING:
-			return fmt.Errorf("cluster deletion aborting: %s", opResp.StatusMessage)
+			return fmt.Errorf("cluster deletion aborting: %s", opResp.GetError().GetMessage())
 		case containerpb.Operation_PENDING, containerpb.Operation_RUNNING:
 			log.Debugf("Cluster deletion in progress, status: %s", opResp.Status)
 		default:
@@ -493,8 +493,8 @@ func (k *driver) getKubeConfig(ctx context.Context) error {
 		AuthInfos: map[string]*clientcmdapi.AuthInfo{
 			k.clusterName: {
 				Exec: &clientcmdapi.ExecConfig{
-					APIVersion: "client.authentication.k8s.io/v1beta1",
-					Command:    "gke-gcloud-auth-plugin",
+					APIVersion:  "client.authentication.k8s.io/v1beta1",
+					Command:     "gke-gcloud-auth-plugin",
 					InstallHint: "Install gke-gcloud-auth-plugin for use with kubectl by following https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#install_plugin",
 				},
 			},
@@ -507,7 +507,7 @@ func (k *driver) getKubeConfig(ctx context.Context) error {
 		return fmt.Errorf("failed to marshal kubeconfig: %w", err)
 	}
 
-	if err := os.WriteFile(k.kubeconfig, data, 0644); err != nil {
+	if err := os.WriteFile(k.kubeconfig, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write kubeconfig: %w", err)
 	}
 
